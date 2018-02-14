@@ -37,7 +37,7 @@ public class PushHandlerActivity extends Activity implements PushConstants {
         boolean dismissed = getIntent().getExtras().getBoolean(DISMISSED, false);
         Log.d(LOG_TAG, "dismissed = " + dismissed);
 
-        if(!startOnBackground){
+        if (!startOnBackground) {
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.cancel(FCMService.getAppName(this), notId);
         }
@@ -45,7 +45,7 @@ public class PushHandlerActivity extends Activity implements PushConstants {
         boolean isPushPluginActive = PushPlugin.isActive();
         boolean inline = processPushBundle(isPushPluginActive, intent);
 
-        if(inline && android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N && !startOnBackground){
+        if (inline && android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N && !startOnBackground) {
             foreground = true;
         }
 
@@ -53,12 +53,12 @@ public class PushHandlerActivity extends Activity implements PushConstants {
 
         finish();
 
-        if(!dismissed) {
+        if (!dismissed) {
             Log.d(LOG_TAG, "isPushPluginActive = " + isPushPluginActive);
             if (!isPushPluginActive && foreground && inline) {
                 Log.d(LOG_TAG, "forceMainActivityReload");
                 forceMainActivityReload(false);
-            } else if(startOnBackground) {
+            } else if (startOnBackground) {
                 Log.d(LOG_TAG, "startOnBackgroundTrue");
                 forceMainActivityReload(true);
             } else {
@@ -82,6 +82,7 @@ public class PushHandlerActivity extends Activity implements PushConstants {
             originalExtras.putBoolean(COLDSTART, !isPushPluginActive);
             originalExtras.putBoolean(DISMISSED, extras.getBoolean(DISMISSED));
             originalExtras.putString(ACTION_CALLBACK, extras.getString(CALLBACK));
+            originalExtras.putBoolean(WAS_TAPPED, true);
             originalExtras.remove(NO_CACHE);
 
             remoteInput = RemoteInput.getResultsFromIntent(intent);
