@@ -153,14 +153,21 @@ static char coldstartKey;
                 NSLog(@"Push Plugin notId handler");
                 [pushHandler.handlerObj setObject:safeHandler forKey:@"handler"];
             }
-
-            pushHandler.notificationMessage = userInfo;
+            
+            NSDictionary *userInfoMutable = [userInfo mutableCopy];
+            [userInfoMutable setValue:@(NO) forKey:@"wasTapped"];
+            pushHandler.notificationMessage = userInfoMutable;
             pushHandler.isInline = NO;
             [pushHandler notificationReceived];
-        } else {
+        }
+        
+        if (silent != 1 || [[userInfo objectForKey:@"onTap"] boolValue] == YES) {
             NSLog(@"just put it in the shade");
+            NSDictionary *userInfoMutable = [userInfo mutableCopy];
+            [userInfoMutable setValue:@(YES) forKey:@"wasTapped"];
+            
             //save it for later
-            self.launchNotification = userInfo;
+            self.launchNotification = userInfoMutable;
 
             completionHandler(UIBackgroundFetchResultNewData);
         }
