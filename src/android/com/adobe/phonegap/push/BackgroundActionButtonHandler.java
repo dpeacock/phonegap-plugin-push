@@ -21,11 +21,12 @@ public class BackgroundActionButtonHandler extends BroadcastReceiver implements 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(FCMService.getAppName(context), notId);
 
-        if (extras != null)	{
+        if (extras != null) {
             Bundle originalExtras = extras.getBundle(PUSH_BUNDLE);
 
             originalExtras.putBoolean(FOREGROUND, false);
             originalExtras.putBoolean(COLDSTART, false);
+            originalExtras.putString(WAS_TAPPED, "true");
             originalExtras.putString(ACTION_CALLBACK, extras.getString(CALLBACK));
 
             Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
@@ -37,5 +38,5 @@ public class BackgroundActionButtonHandler extends BroadcastReceiver implements 
 
             PushPlugin.sendExtras(originalExtras);
         }
-     }
+    }
 }

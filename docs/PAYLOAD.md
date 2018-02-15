@@ -1654,6 +1654,19 @@ push.on('notification', (data) => {
 
 It is absolutely critical that you call `push.finish()` when you have successfully processed your background push data.
 
+If you want your notification to execute the `on('notification')` callback when it is tapped on, add the `onTap` attribute to the data portion of the payload:
+
+```json
+{
+    "registration_ids": ["my device id"],
+    "data": {
+    	"title": "Hello Bob!",
+    	"message": "Phonegap is awesome!",
+    	"onTap": true
+    }
+}
+```
+
 ## Action Buttons
 
 Your notification can include action buttons. For iOS 8+ you must setup the possible actions when you initialize the plugin:
