@@ -288,6 +288,7 @@ Parameter | Type | Description
 `data.additionalData.foreground` | `boolean` | Whether the notification was received while the app was in the foreground
 `data.additionalData.coldstart` | `boolean` | Will be `true` if the application is started by clicking on the push notification, `false` if the app is already started.
 `data.additionalData.dismissed` | `boolean` | Is set to `true` if the notification was dismissed by the user
+`data.additionalData.wasTapped` | `string` | `"true"` if the user tapped on the notification, `"false"` if not.
 
 ### Example
 
