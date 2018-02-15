@@ -81,8 +81,8 @@ public class PushHandlerActivity extends Activity implements PushConstants {
             originalExtras.putBoolean(FOREGROUND, false);
             originalExtras.putBoolean(COLDSTART, !isPushPluginActive);
             originalExtras.putBoolean(DISMISSED, extras.getBoolean(DISMISSED));
+            originalExtras.putString(WAS_TAPPED, "true");
             originalExtras.putString(ACTION_CALLBACK, extras.getString(CALLBACK));
-            originalExtras.putBoolean(WAS_TAPPED, true);
             originalExtras.remove(NO_CACHE);
 
             remoteInput = RemoteInput.getResultsFromIntent(intent);
