@@ -155,7 +155,7 @@ static char coldstartKey;
             }
             
             NSDictionary *userInfoMutable = [userInfo mutableCopy];
-            [userInfoMutable setValue:@(NO) forKey:@"wasTapped"];
+            [userInfoMutable setValue:@"false" forKey:@"wasTapped"];
             pushHandler.notificationMessage = userInfoMutable;
             pushHandler.isInline = NO;
             [pushHandler notificationReceived];
@@ -164,7 +164,7 @@ static char coldstartKey;
         if (silent != 1 || [[userInfo objectForKey:@"onTap"] boolValue] == YES) {
             NSLog(@"just put it in the shade");
             NSDictionary *userInfoMutable = [userInfo mutableCopy];
-            [userInfoMutable setValue:@(YES) forKey:@"wasTapped"];
+            [userInfoMutable setValue:@"true" forKey:@"wasTapped"];
             
             //save it for later
             self.launchNotification = userInfoMutable;
