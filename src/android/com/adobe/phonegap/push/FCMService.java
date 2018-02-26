@@ -83,8 +83,18 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
             extras.putString(ICON, message.getNotification().getIcon());
             extras.putString(COLOR, message.getNotification().getColor());
         }
+
         for (Map.Entry<String, String> entry : message.getData().entrySet()) {
             extras.putString(entry.getKey(), entry.getValue());
+        }
+
+        // Add the number of stacked messages
+        if (messageMap != null) {
+            ArrayList<String> messageList = messageMap.get(Integer.parseInt(extras.getString(NOT_ID), 10));
+            if (messageList != null) {
+                Integer sizeList = messageList.size() + 1;
+                extras.putString(STACK_COUNT, sizeList.toString());
+            }
         }
 
         if (extras != null && isAvailableSender(from)) {
