@@ -108,18 +108,26 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
       mChannel.setShowBadge(badge);
 
       String sound = channel.optString(SOUND, "default");
-      AudioAttributes audioAttributes = new AudioAttributes.Builder()
+      if (sound.equals("false")) {
+        mChannel.setSound(null, null);
+      } else {
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
           .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
           .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).build();
-      if (SOUND_RINGTONE.equals(sound)) {
-        mChannel.setSound(android.provider.Settings.System.DEFAULT_RINGTONE_URI, audioAttributes);
-      } else if (sound != null && !sound.contentEquals(SOUND_DEFAULT)) {
-        Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/raw/" + sound);
-        mChannel.setSound(soundUri, audioAttributes);
-      } else {
-        mChannel.setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI, audioAttributes);
+        if (SOUND_RINGTONE.equals(sound)) {
+          mChannel.setSound(android.provider.Settings.System.DEFAULT_RINGTONE_URI, audioAttributes);
+        } else if (sound != null && !sound.contentEquals(SOUND_DEFAULT)) {
+          Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/raw/" + sound);
+          mChannel.setSound(soundUri, audioAttributes);
+        } else {
+          mChannel.setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI, audioAttributes);
+        }
       }
-
+      
+      if (channel.optString(VIBRATE, "false").equals("false")) {
+        mChannel.enableVibration(false);
+      }
+      
       //JSONArray pattern = channel.optJSONArray(CHANNEL_VIBRATION);
       //mChannel.setVibrationPattern();
 
