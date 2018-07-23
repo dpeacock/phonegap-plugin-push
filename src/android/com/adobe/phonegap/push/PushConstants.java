@@ -100,4 +100,5 @@ public interface PushConstants {
     public static final String LIST_CHANNELS = "listChannels";
     public static final String WAS_TAPPED = "wasTapped";
     public static final String STACK_COUNT = "stackCount";
+    public static final String SHOW_NOTIFICATION = "showNotification";
 }

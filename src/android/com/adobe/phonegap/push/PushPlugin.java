@@ -400,6 +400,14 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
           }
         }
       });
+    } else if (SHOW_NOTIFICATION.equals(action)) {
+      FCMService fcm = new FCMService();
+      try {
+        fcm.showNotification(getApplicationContext(), data.getJSONObject(0));
+        callbackContext.success();
+      } catch (JSONException e) {
+        callbackContext.error(e.getMessage());
+      }
     } else {
       Log.e(LOG_TAG, "Invalid action : " + action);
       callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
