@@ -83,7 +83,6 @@ NSString *const pushPluginApplicationDidBecomeActiveNotification = @"pushPluginA
 
     // app is in the background or inactive, so only call notification callback if this is a silent push
     if (application.applicationState != UIApplicationStateActive) {
-
         NSLog(@"app in-active");
 
         // do some convoluted logic to find out if this should be a silent push.
@@ -138,6 +137,11 @@ NSString *const pushPluginApplicationDidBecomeActiveNotification = @"pushPluginA
         }
 
     } else {
+        NSLog(@"app active"); 
+        PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"]; 
+        pushHandler.notificationMessage = userInfo; 
+        pushHandler.isInline = YES; 
+        [pushHandler notificationReceived]; 
         completionHandler(UIBackgroundFetchResultNoData);
     }
 }
