@@ -46,7 +46,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.security.SecureRandom;
 
 @SuppressLint("NewApi")
 public class FCMService extends FirebaseMessagingService implements PushConstants {
@@ -221,9 +221,9 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
     /*
      * Replace alternate keys with our canonical value
      */
-    private String normalizeKey(String key, String messageKey, String titleKey) {
+    private String normalizeKey(String key, String messageKey, String titleKey, Bundle newExtras) {
         if (key.equals(BODY) || key.equals(ALERT) || key.equals(MP_MESSAGE) || key.equals(GCM_NOTIFICATION_BODY)
-                || key.equals(TWILIO_BODY) || key.equals(messageKey)) {
+            || key.equals(TWILIO_BODY) || key.equals(messageKey) || key.equals(AWS_PINPOINT_BODY)) {
             return MESSAGE;
         } else if (key.equals(TWILIO_TITLE) || key.equals(SUBJECT) || key.equals(titleKey)) {
             return TITLE;
@@ -231,6 +231,9 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
             return COUNT;
         } else if (key.equals(SOUNDNAME) || key.equals(TWILIO_SOUND)) {
             return SOUND;
+        } else if (key.equals(AWS_PINPOINT_PICTURE)) {
+            newExtras.putString(STYLE, STYLE_PICTURE);
+            return PICTURE;
         } else if (key.startsWith(GCM_NOTIFICATION)) {
             return key.substring(GCM_NOTIFICATION.length() + 1, key.length());
         } else if (key.startsWith(GCM_N)) {
@@ -238,10 +241,12 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
         } else if (key.startsWith(UA_PREFIX)) {
             key = key.substring(UA_PREFIX.length() + 1, key.length());
             return key.toLowerCase();
+        } else if (key.startsWith(AWS_PINPOINT_PREFIX)) {
+            return key.substring(AWS_PINPOINT_PREFIX.length() + 1, key.length());
         } else {
             return key;
         }
-    }
+    }   
 
     /*
      * Parse bundle into normalized keys.
@@ -274,52 +279,51 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
 
                                 Log.d(LOG_TAG, "key = data/" + jsonKey);
 
-                                String value = data.getString(jsonKey);
-                                jsonKey = normalizeKey(jsonKey, messageKey, titleKey);
-                                value = localizeKey(context, jsonKey, value);
+                String value = data.getString(jsonKey);
+                jsonKey = normalizeKey(jsonKey, messageKey, titleKey, newExtras);
+                value = localizeKey(context, jsonKey, value);
 
-                                newExtras.putString(jsonKey, value);
-                            }
-                        }
-                        else if (data.has(LOC_KEY) || data.has(LOC_DATA)) {
-                            String newKey = normalizeKey(key, messageKey, titleKey);
-                            Log.d(LOG_TAG, "replace key " + key + " with " + newKey);
-                            replaceKey(context, key, newKey, extras, newExtras);
-                        }
-                    } catch (JSONException e) {
-                        Log.e(LOG_TAG, "normalizeExtras: JSON exception");
-                    }
-                } else {
-                    String newKey = normalizeKey(key, messageKey, titleKey);
-                    Log.d(LOG_TAG, "replace key " + key + " with " + newKey);
-                    replaceKey(context, key, newKey, extras, newExtras);
-                }
-            } else if (key.equals(("notification"))) {
-                Bundle value = extras.getBundle(key);
-                Iterator<String> iterator = value.keySet().iterator();
-                while (iterator.hasNext()) {
-                    String notifkey = iterator.next();
+                newExtras.putString(jsonKey, value);
+              }
+            } else if (data.has(LOC_KEY) || data.has(LOC_DATA)) {
+              String newKey = normalizeKey(key, messageKey, titleKey, newExtras);
+              Log.d(LOG_TAG, "replace key " + key + " with " + newKey);
+              replaceKey(context, key, newKey, extras, newExtras);
+            }
+          } catch (JSONException e) {
+            Log.e(LOG_TAG, "normalizeExtras: JSON exception");
+          }
+        } else {
+          String newKey = normalizeKey(key, messageKey, titleKey, newExtras);
+          Log.d(LOG_TAG, "replace key " + key + " with " + newKey);
+          replaceKey(context, key, newKey, extras, newExtras);
+        }
+      } else if (key.equals(("notification"))) {
+        Bundle value = extras.getBundle(key);
+        Iterator<String> iterator = value.keySet().iterator();
+        while (iterator.hasNext()) {
+          String notifkey = iterator.next();
 
-                    Log.d(LOG_TAG, "notifkey = " + notifkey);
-                    String newKey = normalizeKey(notifkey, messageKey, titleKey);
-                    Log.d(LOG_TAG, "replace key " + notifkey + " with " + newKey);
+          Log.d(LOG_TAG, "notifkey = " + notifkey);
+          String newKey = normalizeKey(notifkey, messageKey, titleKey, newExtras);
+          Log.d(LOG_TAG, "replace key " + notifkey + " with " + newKey);
 
                     String valueData = value.getString(notifkey);
                     valueData = localizeKey(context, newKey, valueData);
 
-                    newExtras.putString(newKey, valueData);
-                }
-                continue;
-                // In case we weren't working on the payload data node or the notification node,
-                // normalize the key.
-                // This allows to have "message" as the payload data key without colliding
-                // with the other "message" key (holding the body of the payload)
-                // See issue #1663
-            } else {
-                String newKey = normalizeKey(key, messageKey, titleKey);
-                Log.d(LOG_TAG, "replace key " + key + " with " + newKey);
-                replaceKey(context, key, newKey, extras, newExtras);
-            }
+          newExtras.putString(newKey, valueData);
+        }
+        continue;
+        // In case we weren't working on the payload data node or the notification node,
+        // normalize the key.
+        // This allows to have "message" as the payload data key without colliding
+        // with the other "message" key (holding the body of the payload)
+        // See issue #1663
+      } else {
+        String newKey = normalizeKey(key, messageKey, titleKey, newExtras);
+        Log.d(LOG_TAG, "replace key " + key + " with " + newKey);
+        replaceKey(context, key, newKey, extras, newExtras);
+      }
 
         } // while
 
@@ -399,20 +403,21 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
         notificationIntent.putExtra(PUSH_BUNDLE, extras);
         notificationIntent.putExtra(NOT_ID, notId);
 
-        int requestCode = new Random().nextInt();
+        SecureRandom random = new SecureRandom();
+        int requestCode = random.nextInt();
         PendingIntent contentIntent = PendingIntent.getActivity(context, requestCode, notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-
+            PendingIntent.FLAG_UPDATE_CURRENT);
+        
         Intent dismissedNotificationIntent = new Intent(context, PushDismissedHandler.class);
         dismissedNotificationIntent.putExtra(PUSH_BUNDLE, extras);
         dismissedNotificationIntent.putExtra(NOT_ID, notId);
         dismissedNotificationIntent.putExtra(DISMISSED, true);
         dismissedNotificationIntent.setAction(PUSH_DISMISSED);
 
-        requestCode = new Random().nextInt();
+        requestCode = random.nextInt();
         PendingIntent deleteIntent = PendingIntent.getBroadcast(context, requestCode, dismissedNotificationIntent,
-                PendingIntent.FLAG_CANCEL_CURRENT);
-
+        PendingIntent.FLAG_CANCEL_CURRENT);
+        
         NotificationCompat.Builder mBuilder = null;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -432,7 +437,6 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
                 Log.d(LOG_TAG, "Using channel ID = " + channelID);
                 mBuilder = new NotificationCompat.Builder(context, channelID);
             }
-
         } else {
             mBuilder = new NotificationCompat.Builder(context);
         }
@@ -557,7 +561,7 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
                 for (int i = 0; i < actionsArray.length(); i++) {
                     int min = 1;
                     int max = 2000000000;
-                    Random random = new Random();
+                    SecureRandom random = new SecureRandom();
                     int uniquePendingIntentRequestCode = random.nextInt((max - min) + 1) + min;
                     Log.d(LOG_TAG, "adding action");
                     JSONObject action = actionsArray.getJSONObject(i);
@@ -575,33 +579,33 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
                             Log.d(LOG_TAG, "push receiver");
                             intent = new Intent(context, BackgroundActionButtonHandler.class);
                         }
-
+            
                         updateIntent(intent, action.getString(CALLBACK), extras, foreground, notId);
-
+            
                         if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.M) {
                             Log.d(LOG_TAG, "push activity for notId " + notId);
                             pIntent = PendingIntent.getActivity(context, uniquePendingIntentRequestCode, intent,
-                                    PendingIntent.FLAG_ONE_SHOT);
+                                PendingIntent.FLAG_ONE_SHOT);
                         } else {
                             Log.d(LOG_TAG, "push receiver for notId " + notId);
                             pIntent = PendingIntent.getBroadcast(context, uniquePendingIntentRequestCode, intent,
-                                    PendingIntent.FLAG_ONE_SHOT);
+                                PendingIntent.FLAG_ONE_SHOT);
                         }
                     } else if (foreground) {
                         intent = new Intent(context, PushHandlerActivity.class);
                         updateIntent(intent, action.getString(CALLBACK), extras, foreground, notId);
                         pIntent = PendingIntent.getActivity(context, uniquePendingIntentRequestCode, intent,
-                                PendingIntent.FLAG_UPDATE_CURRENT);
+                            PendingIntent.FLAG_UPDATE_CURRENT);
                     } else {
                         intent = new Intent(context, BackgroundActionButtonHandler.class);
                         updateIntent(intent, action.getString(CALLBACK), extras, foreground, notId);
                         pIntent = PendingIntent.getBroadcast(context, uniquePendingIntentRequestCode, intent,
-                                PendingIntent.FLAG_UPDATE_CURRENT);
+                            PendingIntent.FLAG_UPDATE_CURRENT);
                     }
-
+        
                     NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(
                         getImageId(resources, action.optString(ICON, ""), packageName), action.getString(TITLE), pIntent);
-
+        
                     RemoteInput remoteInput = null;
                     if (inline) {
                         Log.d(LOG_TAG, "create remote input");
@@ -609,16 +613,17 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
                         remoteInput = new RemoteInput.Builder(INLINE_REPLY).setLabel(replyLabel).build();
                         actionBuilder.addRemoteInput(remoteInput);
                     }
-
+        
                     NotificationCompat.Action wAction = actionBuilder.build();
                     wActions.add(actionBuilder.build());
-
+        
                     if (inline) {
                         mBuilder.addAction(wAction);
                     } else {
                         mBuilder.addAction(getImageId(resources, action.optString(ICON, ""), packageName), action.getString(TITLE),
-                        pIntent);
+                            pIntent);
                     }
+
                     wAction = null;
                     pIntent = null;
                 }
@@ -953,16 +958,19 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
     }
 
     private Spanned fromHtml(String source) {
-        if (source != null)
+        if (source != null) {
             return Html.fromHtml(source);
-        else
+        } else {
             return null;
+        }
     }
 
     private boolean isAvailableSender(String from) {
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences(PushPlugin.COM_ADOBE_PHONEGAP_PUSH,
-                Context.MODE_PRIVATE);
+            Context.MODE_PRIVATE);
         String savedSenderID = sharedPref.getString(SENDER_ID, "");
+
+        Log.d(LOG_TAG, "sender id = " + savedSenderID);
 
         return from.equals(savedSenderID) || from.startsWith("/topics/");
     }
