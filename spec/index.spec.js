@@ -463,5 +463,24 @@ describe('phonegap-plugin-push', function () {
         });
       });
     });
+
+    describe('show notification method', function () {
+      describe('cordova.exec', function () {
+        it('should call cordova.exec on next process tick using number argument', function (done) {
+          var push = PushNotification.init(options);
+          push.showNotification(function () {}, function () {}, {title:'test', message:'test'});
+          setTimeout(function () {
+            expect(execSpy).toHaveBeenCalledWith(
+              jasmine.any(Function),
+              jasmine.any(Function),
+              'PushNotification',
+              'showNotification',
+              [{title:'test', message:'test'}]
+            );
+            done();
+          }, 100);
+        });
+      });
+    });
   });
 });

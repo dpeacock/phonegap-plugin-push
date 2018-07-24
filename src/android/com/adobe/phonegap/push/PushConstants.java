@@ -105,4 +105,5 @@ public interface PushConstants {
   public static final String WAS_TAPPED = "wasTapped";
   public static final String STACK_COUNT = "stackCount";
   public static final String SHOW_NOTIFICATION = "showNotification";
+  public static final String AUTO_CANCEL = "autoCancel";
 }

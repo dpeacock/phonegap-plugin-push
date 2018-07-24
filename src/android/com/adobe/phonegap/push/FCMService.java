@@ -442,8 +442,7 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
         }
 
         mBuilder.setWhen(System.currentTimeMillis()).setContentTitle(fromHtml(extras.getString(TITLE)))
-        .setTicker(fromHtml(extras.getString(TITLE))).setContentIntent(contentIntent).setDeleteIntent(deleteIntent)
-        .setAutoCancel(true);
+        .setTicker(fromHtml(extras.getString(TITLE))).setContentIntent(contentIntent).setDeleteIntent(deleteIntent);
 
         SharedPreferences prefs = context.getSharedPreferences(PushPlugin.COM_ADOBE_PHONEGAP_PUSH, Context.MODE_PRIVATE);
         String localIcon = prefs.getString(ICON, null);
@@ -529,6 +528,11 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
          *  Notification ongoing
          */
         setNotificationOngoing(extras, mBuilder);
+
+        /*
+         * Notification auto cancel
+         */
+        setNotificationAutoCancel(extras, mBuilder);
 
         /*
          * Notification count
@@ -681,6 +685,11 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
     private void setNotificationOngoing(Bundle extras, NotificationCompat.Builder mBuilder) {
         boolean ongoing = Boolean.parseBoolean(extras.getString(ONGOING, "false"));
         mBuilder.setOngoing(ongoing);
+    }
+
+    private void setNotificationAutoCancel(Bundle extras, NotificationCompat.Builder mBuilder) {
+        boolean autoCancel = Boolean.parseBoolean(extras.getString(AUTO_CANCEL, "true"));
+        mBuilder.setAutoCancel(autoCancel);
     }
 
     private void setNotificationMessage(int notId, Bundle extras, NotificationCompat.Builder mBuilder) {
