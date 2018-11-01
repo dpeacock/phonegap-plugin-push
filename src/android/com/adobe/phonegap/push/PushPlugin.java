@@ -50,7 +50,6 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
   /**
    * Gets the application context from cordova's main activity.
-   *
    * @return the application context
    */
   private Context getApplicationContext() {
@@ -125,8 +124,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         }
       }
 
-      // If vibration settings is an array set vibration pattern, else set enable
-      // vibration.
+      // If vibration settings is an array set vibration pattern, else set enable vibration.
       JSONArray pattern = channel.optJSONArray(CHANNEL_VIBRATION);
       if (pattern != null) {
         int patternLength = pattern.length();
@@ -152,8 +150,8 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
       final NotificationManager notificationManager = (NotificationManager) cordova.getActivity()
           .getSystemService(Context.NOTIFICATION_SERVICE);
       List<NotificationChannel> channels = notificationManager.getNotificationChannels();
-
-      for (int i = 0; i < channels.size(); i++) {
+      
+      for (int i=0; i<channels.size(); i++ ) {
         id = channels.get(i).getId();
         if (id.equals(DEFAULT_CHANNEL_ID)) {
           return;
@@ -198,18 +196,10 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
             Log.v(LOG_TAG, "execute: senderID=" + senderID);
 
-            try {
-              token = FirebaseInstanceId.getInstance().getToken();
-            } catch (IllegalStateException e) {
-              Log.e(LOG_TAG, "Exception raised while getting Firebase token " + e.getMessage());
-            }
+            token = FirebaseInstanceId.getInstance().getToken();
 
             if (token == null) {
-              try {
-                token = FirebaseInstanceId.getInstance().getToken(senderID, FCM);
-              } catch (IllegalStateException e) {
-                Log.e(LOG_TAG, "Exception raised while getting Firebase token " + e.getMessage());
-              }
+              token = FirebaseInstanceId.getInstance().getToken(senderID, FCM);
             }
 
             if (!"".equals(token)) {
@@ -469,9 +459,8 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
   }
 
   /*
-   * Sends the pushbundle extras to the client application. If the client
-   * application isn't currently active and the no-cache flag is not set, it is
-   * cached for later processing.
+   * Sends the pushbundle extras to the client application.
+   * If the client application isn't currently active and the no-cache flag is not set, it is cached for later processing.
    */
   public static void sendExtras(Bundle extras) {
     if (extras != null) {
@@ -548,8 +537,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
   private void clearNotification(int id) {
     final NotificationManager notificationManager = (NotificationManager) cordova.getActivity()
         .getSystemService(Context.NOTIFICATION_SERVICE);
-    String appName = (String) this.cordova.getActivity().getPackageManager()
-        .getApplicationLabel(this.cordova.getActivity().getApplicationInfo());
+    String appName = (String) this.cordova.getActivity().getPackageManager().getApplicationLabel(this.cordova.getActivity().getApplicationInfo());
     notificationManager.cancel(appName, id);
   }
 
